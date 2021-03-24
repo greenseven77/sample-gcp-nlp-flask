@@ -1,0 +1,4 @@
+example:
+
+![getnews](getnews.png)
+
