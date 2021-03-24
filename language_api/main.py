@@ -10,7 +10,6 @@ from google.cloud import language_v1 as language
 
 
 
-
 app = Flask(__name__)
 
 
