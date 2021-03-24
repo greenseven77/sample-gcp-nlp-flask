@@ -8,18 +8,14 @@ from flask import Flask, redirect, render_template, request
 from google.cloud import datastore
 from google.cloud import language_v1 as language
 
-
-
-
 app = Flask(__name__)
-
 
 @app.route("/")
 def homepage():
     # Create a Cloud Datastore client.
     datastore_client = datastore.Client()
 
-    # # Use the Cloud Datastore client to fetch information from Datastore
+    # Use the Cloud Datastore client to fetch information from Datastore
     # Query looks for all documents of the 'Sentences' kind, which is how we
     # store them in upload_text()
     query = datastore_client.query(kind="Sentences")
@@ -32,8 +28,8 @@ def homepage():
 @app.route("/upload", methods=["GET", "POST"])
 # instead of giving back positive or negative, give back the exact number of sentiment
 def upload_text():
-    text = request.form["text"]
-
+    file_name = request.form["text"]
+    text = get_text_from_file (file_name)
     # Analyse sentiment using Sentiment API call
     sentiment = analyze_text_sentiment(text)[0].get('sentiment score')
     
@@ -93,6 +89,12 @@ def server_error(e):
         ),
         500,
     )
+
+# Module to give 'sentiment' results:
+# take a sentence, run the module, result back:
+# 1. original text; 
+# 2. sentiment score -- between -1 to 1
+# 3. sentiment magnitude -- absolute value of the score, but will agrregate
 def analyze_text_sentiment(text):
     client = language.LanguageServiceClient()
     document = language.Document(content=text, type_=language.Document.Type.PLAIN_TEXT)
@@ -119,37 +121,7 @@ def analyze_text_sentiment(text):
 
     return sentence_sentiment
 
-
-# Module to give 'sentiment' results:
-# take a sentence, run the module, result back:
-# 1. original text; 
-# 2. sentiment score -- between -1 to 1
-# 3. sentiment magnitude -- absolute value of the score, but will agrregate
-def analyze_text_sentiment(text):
-    client = language.LanguageServiceClient()
-    document = language.Document(content=text, type_=language.Document.Type.PLAIN_TEXT)
-
-    response = client.analyze_sentiment(document=document)
-
-    sentiment = response.document_sentiment
-    results = dict(
-        text=text,
-        score=f"{sentiment.score:.1%}",
-        magnitude=f"{sentiment.magnitude:.1%}",
-    )
-    
-    # Get sentiment for all sentences in the document
-    sentence_sentiment = []
-    for sentence in response.sentences:
-        item={}
-        item["text"]=sentence.text.content
-        item["sentiment score"]=sentence.sentiment.score
-        item["sentiment magnitude"]=sentence.sentiment.magnitude
-        sentence_sentiment.append(item)
-    
-    return sentence_sentiment
-
-# return results by sentence
+# return results to data frame, each sentence is a record set
 def save_sentiment_to_df (text):
     df_sentiment=pd.DataFrame(analyze_text_sentiment(text))
     return df_sentiment
