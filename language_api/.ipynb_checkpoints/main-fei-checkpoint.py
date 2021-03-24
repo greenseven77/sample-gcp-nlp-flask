@@ -1,4 +1,5 @@
 from datetime import datetime
+import pandas as pd
 import logging
 import os
 
@@ -29,22 +30,13 @@ def homepage():
 
 
 @app.route("/upload", methods=["GET", "POST"])
+# instead of giving back positive or negative, give back the exact number of sentiment
 def upload_text():
     text = request.form["text"]
 
     # Analyse sentiment using Sentiment API call
     sentiment = analyze_text_sentiment(text)[0].get('sentiment score')
-
-    # Assign a label based on the score
-    overall_sentiment = 'unknown'
-    print("The sentiment score is: "+str(sentiment))
-    if sentiment > 0:
-        overall_sentiment = 'positive'
-    if sentiment < 0:
-        overall_sentiment = 'negative'
-    if sentiment == 0:
-        overall_sentiment = 'neutral'
-
+    
     # Create a Cloud Datastore client.
     datastore_client = datastore.Client()
 
@@ -65,14 +57,29 @@ def upload_text():
     entity = datastore.Entity(key)
     entity["text"] = text
     entity["timestamp"] = current_datetime
-    entity["sentiment"] = overall_sentiment
+    entity["sentiment"] = sentiment
 
     # Save the new entity to Datastore.
     datastore_client.put(entity)
 
+    # test save results to a csv
+    save_txt_sentiment_to_csv(text, sentiment)
+    
     # Redirect to the home page.
     return redirect("/")
 
+def save_txt_sentiment_to_csv(text, sentiment):
+    # list of name, degree, score 
+    txt = ["i am happy", "a cup of tea", "not nice", "pretty"] 
+    senti = [0.5, 0, -0.3, 0.36] 
+
+    # dictionary of lists  
+    dict = {'text': txt, 'sentiment': senti}  
+
+    df = pd.DataFrame(dict) 
+
+    # saving the dataframe 
+    df.to_csv('text_sentiment_data.csv') 
 
 @app.errorhandler(500)
 def server_error(e):
