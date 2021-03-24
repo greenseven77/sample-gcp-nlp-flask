@@ -28,8 +28,8 @@ def homepage():
 @app.route("/upload", methods=["GET", "POST"])
 # instead of giving back positive or negative, give back the exact number of sentiment
 def upload_text():
-    file_name = request.form["text"]
-    text = get_text_from_file (file_name)
+    text = request.form["text"]
+    #text = get_text_from_file (file_name)
     # Analyse sentiment using Sentiment API call
     sentiment = analyze_text_sentiment(text)[0].get('sentiment score')
     
