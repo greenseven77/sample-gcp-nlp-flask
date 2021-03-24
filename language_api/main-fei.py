@@ -29,6 +29,7 @@ def homepage():
 
 
 @app.route("/upload", methods=["GET", "POST"])
+# instead of giving back positive or negative, give back the exact number of sentiment
 def upload_text():
     text = request.form["text"]
 
@@ -65,7 +66,7 @@ def upload_text():
     entity = datastore.Entity(key)
     entity["text"] = text
     entity["timestamp"] = current_datetime
-    entity["sentiment"] = overall_sentiment
+    entity["sentiment"] = sentiment
 
     # Save the new entity to Datastore.
     datastore_client.put(entity)
