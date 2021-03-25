@@ -14,7 +14,7 @@ pd.set_option('display.max_columns', None)
 # 1. original text; 
 # 2. sentiment score -- between -1 to 1
 # 3. sentiment magnitude -- absolute value of the score, but will agrregate
-def analyze_text_sentiment(text, country_code):
+def analyze_text_sentiment(text):
     client = language.LanguageServiceClient()
     document = language.Document(content=text, type_=language.Document.Type.PLAIN_TEXT)
 
@@ -34,14 +34,13 @@ def analyze_text_sentiment(text, country_code):
         item["text"]=sentence.text.content
         item["sentiment score"]=sentence.sentiment.score
         item["sentiment magnitude"]=sentence.sentiment.magnitude
-        item["language"]=country_code
         sentence_sentiment.append(item)
     
     return sentence_sentiment
 
 # return results by sentence
-def save_sentiment_to_df (text, country_code):
-    df_sentiment=pd.DataFrame(analyze_text_sentiment(text, country_code))
+def save_sentiment_to_df (text):
+    df_sentiment=pd.DataFrame(analyze_text_sentiment(text))
     return df_sentiment
 
 # get text from a file
@@ -58,15 +57,15 @@ def get_text_from_file (file_name):
     return data
 
 #Get basic information
-def get_basic_info(file_name,country_code):
+def get_basic_info(file_name):
     text = get_text_from_file (file_name)
     # create the result into dataframe for further info
-    df_text_sentiment_stats = save_sentiment_to_df(text, country_code)
+    df_text_sentiment_stats = save_sentiment_to_df(text)
     df_text_sentiment_stats.reset_index(inplace=True)
     # 1. how many sentense?
     cnt_sentences = df_text_sentiment_stats.shape[0]
     print("There are total of ", cnt_sentences, " sentences in the artical.")
     # 2. The sentiment score of each sentence:
     #print(df_text_sentiment_stats['sentiment score'])
+    
     return df_text_sentiment_stats['sentiment score']
-
